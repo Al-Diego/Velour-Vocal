@@ -82,11 +82,14 @@ To have the build copy plugins into `~/Library/Audio/Plug-Ins/{VST3,Components}`
 `-DVELOUR_COPY_PLUGIN_AFTER_BUILD=ON` to the first command. For a universal binary add
 `-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"`.
 
-### Windows (Visual Studio 2022)
+### Windows (Visual Studio 2022 or newer)
 
 ```bash
-cmake -B build -G "Visual Studio 17 2022" -A x64
+cmake -B build -A x64
 ```
+
+CMake picks the newest installed Visual Studio. To choose one explicitly, add e.g.
+`-G "Visual Studio 17 2022"`.
 
 ```bash
 cmake --build build --config Release
