@@ -1,0 +1,60 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows (VST3 + Standalone)
+            os: windows-latest
+            configure: cmake -B build -G "Visual Studio 17 2022" -A x64
+            tests: build/VelourVocalTests_artefacts/Release/VelourVocalTests.exe
+            pluginval_zip: pluginval_Windows.zip
+            pluginval_bin: ./pluginval.exe
+          - name: macOS (VST3 + AU + Standalone)
+            os: macos-latest
+            configure: cmake -B build -G Xcode -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
+            tests: build/VelourVocalTests_artefacts/Release/VelourVocalTests
+            pluginval_zip: pluginval_macOS.zip
+            pluginval_bin: ./pluginval.app/Contents/MacOS/pluginval
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        shell: bash
+        run: ${{ matrix.configure }}
+
+      - name: Build
+        shell: bash
+        run: cmake --build build --config Release --parallel 4
+
+      - name: DSP tests
+        shell: bash
+        run: ${{ matrix.tests }}
+
+      - name: Validate VST3 with pluginval
+        shell: bash
+        run: |
+          curl -sSL -o pluginval.zip "https://github.com/Tracktion/pluginval/releases/latest/download/${{ matrix.pluginval_zip }}"
+          unzip -q pluginval.zip
+          ${{ matrix.pluginval_bin }} --strictness-level 5 --validate-in-process --skip-gui-tests \
+            "build/VelourVocal_artefacts/Release/VST3/Velour Vocal.vst3"
+
+      - name: Upload plugins
+        uses: actions/upload-artifact@v4
+        with:
+          name: VelourVocal-${{ runner.os }}
+          path: |
+            build/VelourVocal_artefacts/Release/VST3
+            build/VelourVocal_artefacts/Release/AU
+            build/VelourVocal_artefacts/Release/Standalone
+          if-no-files-found: error
