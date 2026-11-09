@@ -38,6 +38,14 @@ VelourVocalEditor::VelourVocalEditor (VelourVocalProcessor& p)
         applyProfileCrossovers (index);
     };
 
+    // --- factory presets
+    for (int i = 0; i < Params::numFactoryPresets; ++i)
+        presetBox.addItem (Params::factoryPresets[i].name, i + 1);
+    presetBox.setSelectedItemIndex (processor.getCurrentProgram(), dontSendNotification);
+    presetBox.setTooltip ("Presets: quick starting points (keeps your voice profile)");
+    presetBox.onChange = [this] { processor.setCurrentProgram (presetBox.getSelectedItemIndex()); };
+    addAndMakeVisible (presetBox);
+
     // --- delta
     deltaButton.setTooltip ("Delta: hear only what is being removed");
     addAndMakeVisible (deltaButton);
@@ -152,6 +160,7 @@ void VelourVocalEditor::resized()
 
     profileBox.setBounds (scaled (24, 54, 122, 26));
     deltaButton.setBounds (scaled (448, 20, 48, 30));
+    presetBox.setBounds (scaled (504, 22, 112, 26));
 
     const int header = roundToInt (22.0f * scale);
     for (auto* k : { &lowKnob, &midKnob, &highKnob })
@@ -175,6 +184,10 @@ void VelourVocalEditor::resized()
 void VelourVocalEditor::timerCallback()
 {
     auto& engine = processor.getEngine();
+
+    // follow preset changes made from the host's own preset menu
+    if (presetBox.getSelectedItemIndex() != processor.getCurrentProgram())
+        presetBox.setSelectedItemIndex (processor.getCurrentProgram(), dontSendNotification);
 
     if (engine.getDisplayFifo().pullLatest (frame))
     {

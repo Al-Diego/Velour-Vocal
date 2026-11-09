@@ -108,6 +108,46 @@ void VelourVocalProcessor::process (juce::AudioBuffer<float>& buffer, bool bypas
     }
 }
 
+const juce::String VelourVocalProcessor::getProgramName (int index)
+{
+    return juce::isPositiveAndBelow (index, Params::numFactoryPresets) ? Params::factoryPresets[index].name : "";
+}
+
+void VelourVocalProcessor::setCurrentProgram (int index)
+{
+    if (! juce::isPositiveAndBelow (index, Params::numFactoryPresets))
+        return;
+
+    currentPreset = index;
+    apvts.state.setProperty ("preset", index, nullptr);
+
+    const auto& p = Params::factoryPresets[index];
+    const auto xovers = Params::defaultsForProfile (juce::roundToInt (raw.voiceProfile->load()));
+
+    auto set = [this] (const char* id, float value)
+    {
+        auto* param = apvts.getParameter (id);
+        param->beginChangeGesture();
+        param->setValueNotifyingHost (param->convertTo0to1 (value));
+        param->endChangeGesture();
+    };
+
+    set (ParamIDs::lowAmount,    p.low);
+    set (ParamIDs::midAmount,    p.mid);
+    set (ParamIDs::highAmount,   p.high);
+    set (ParamIDs::highShape,    p.highBroad ? 1.0f : 0.0f);
+    set (ParamIDs::dynEnabled,   p.dynOn ? 1.0f : 0.0f);
+    set (ParamIDs::dynThreshold, p.dynThresholdDb);
+    set (ParamIDs::xoverLowMid,  xovers.xoverLowMid);
+    set (ParamIDs::xoverMidHigh, xovers.xoverMidHigh);
+    set (ParamIDs::outputGain,   0.0f);
+    set (ParamIDs::delta,        0.0f);
+    for (auto* id : { ParamIDs::lowEnabled, ParamIDs::midEnabled, ParamIDs::highEnabled })
+        set (id, 1.0f);
+    for (auto* id : { ParamIDs::lowSolo, ParamIDs::midSolo, ParamIDs::highSolo })
+        set (id, 0.0f);
+}
+
 juce::AudioProcessorEditor* VelourVocalProcessor::createEditor()
 {
     return new VelourVocalEditor (*this);
@@ -124,7 +164,10 @@ void VelourVocalProcessor::setStateInformation (const void* data, int sizeInByte
 {
     if (auto xml = getXmlFromBinary (data, sizeInBytes))
         if (xml->hasTagName (apvts.state.getType()))
+        {
             apvts.replaceState (juce::ValueTree::fromXml (*xml));
+            currentPreset = juce::jlimit (0, Params::numFactoryPresets - 1, (int) apvts.state.getProperty ("preset", 0));
+        }
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

@@ -30,7 +30,7 @@ private:
     float scale = 1.0f;
     bool sizeRestored = false;
 
-    juce::ComboBox profileBox;
+    juce::ComboBox profileBox, presetBox;
     std::unique_ptr<juce::ParameterAttachment> profileAttachment;
 
     PillButton deltaButton { juce::String::fromUTF8 ("\xce\x94") };

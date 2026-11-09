@@ -32,6 +32,7 @@ Bypass keeps the STFT running, so latency stays constant and toggling bypass doe
 | LED next to band name | Band on/off |
 | Headphone icon | Solo: hear only that band (processed) |
 | Bell / shelf buttons | High band detection: **Focused** (narrow peaks, e.g. sibilance) or **Broad** (wider, gentler) |
+| Preset menu | Default, **Clean** (light all-round polish), De-Ess, Tame Harshness, Remove Mud. Presets keep your voice profile and use its crossovers. Also available in the host's preset/program list. |
 | Profile menu | Male / Female / Neutral: tunes harmonic blur width and timing, and snaps crossovers to typical points (only when *you* pick it, never on session load) |
 | Displays | Grey = input spectrum, teal = gain reduction (scale 0–12 dB). Drag the round handles to move crossovers (Low/Mid 150–600 Hz, Mid/High 2–8 kHz); double-click resets. |
 | **Δ** | Delta: output only what's being removed |
